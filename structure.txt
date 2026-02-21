@@ -1,0 +1,4 @@
+photo-editor-phish/
+├── index.html
+├── server.py
+└── README.md
