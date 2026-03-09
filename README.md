@@ -61,13 +61,7 @@ cloudflared tunnel --url http://localhost:8080
 
 Cloudflare will generate a public URL that can be shared for testing.
 
-Project Structure
-Galleryphishing/
-│
-├── server.py        # Main server script
-├── static/          # Static files (CSS, JS, assets)
-├── templates/       # HTML templates
-└── README.md
+
 Disclaimer
 
 This project is intended for educational purposes and development practice only.
